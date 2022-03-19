@@ -1,2 +1,4 @@
-# defer4k
-Kotlin compiler plugin to enable defer statements in the Kotlin programming language
+# deferred
+
+A compiler plugin to enable [defer statements](https://go.dev/ref/spec#Defer_statements) in
+the [Kotlin programming language](https://kotlinlang.org/). 

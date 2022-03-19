@@ -1,0 +1,7 @@
+naming:
+  MatchingDeclarationName:
+    active: false
+
+style:
+  ReturnCount:
+    active: false
