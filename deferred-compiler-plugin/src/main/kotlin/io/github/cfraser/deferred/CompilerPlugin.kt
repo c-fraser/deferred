@@ -31,9 +31,10 @@ import org.jetbrains.kotlin.ir.declarations.IrModuleFragment
 import org.jetbrains.kotlin.ir.expressions.IrBlockBody
 import org.jetbrains.kotlin.ir.expressions.IrBody
 import org.jetbrains.kotlin.ir.expressions.IrCall
+import org.jetbrains.kotlin.ir.expressions.IrReturn
 import org.jetbrains.kotlin.ir.expressions.impl.IrTryImpl
+import org.jetbrains.kotlin.ir.types.IrType
 import org.jetbrains.kotlin.ir.util.kotlinFqName
-import org.jetbrains.kotlin.ir.util.statements
 import org.jetbrains.kotlin.name.FqName
 
 /**
@@ -72,14 +73,19 @@ internal class CompilerPlugin : ComponentRegistrar {
   private class Transformer(private val context: IrPluginContext) :
       IrElementTransformerVoidWithContext() {
 
-    /** Visit the [IrBody] and *defer* any *deferrable* statements. */
-    override fun visitBody(body: IrBody): IrBody {
+    /** Visit the [IrBlockBody] and *defer* any *deferrable* statements. */
+    override fun visitBlockBody(body: IrBlockBody): IrBody {
+      val visited by lazy { super.visitBlockBody(body) }
+      val scope = currentScope?.scope ?: return visited
       val (deferrable, statements) =
           body.statements.partition { it.isDeferrable() }.takeUnless { it.first.isEmpty() }
-              ?: return super.visitBody(body)
-      val symbol = currentScope?.scope?.scopeOwnerSymbol ?: return super.visitBody(body)
-      val builder = DeclarationIrBuilder(context, symbol, body.startOffset, body.endOffset)
-      return builder.defer(statements, deferrable)
+              ?: return visited
+      val builder =
+          DeclarationIrBuilder(context, scope.scopeOwnerSymbol, body.startOffset, body.endOffset)
+      val returnType =
+          statements.find { it is IrReturn }.let { it as? IrReturn }?.type
+              ?: context.irBuiltIns.unitType
+      return builder.defer(statements, deferrable, returnType)
     }
 
     private companion object {
@@ -94,19 +100,21 @@ internal class CompilerPlugin : ComponentRegistrar {
           this is IrCall && symbol.owner.kotlinFqName == FqName("io.github.cfraser.deferred.defer")
 
       /**
-       * Build an [IrBlockBody] that executes the *statements* in a *try-finally* expression.
+       * Build an [IrBlockBody] that executes the [IrStatement] instances in a *try-finally*
+       * expression.
        *
        * The [statements] are added *as-is* to the *try* block, while the [deferrable] statements
        * are added in reverse order (LIFO) to the *finally* block.
        */
       fun DeclarationIrBuilder.defer(
           statements: List<IrStatement>,
-          deferrable: List<IrStatement>
+          deferrable: List<IrStatement>,
+          returnType: IrType
       ): IrBlockBody = irBlockBody {
         +IrTryImpl(
             startOffset,
             endOffset,
-            context.irBuiltIns.unitType,
+            returnType,
             irBlock { statements.forEach { +it } },
             emptyList(),
             irBlock { (deferrable.size - 1 downTo 0).forEach { +deferrable[it] } })

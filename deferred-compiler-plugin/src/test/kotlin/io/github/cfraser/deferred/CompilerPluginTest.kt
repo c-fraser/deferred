@@ -23,6 +23,7 @@ import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
 import org.jetbrains.kotlin.util.capitalizeDecapitalize.capitalizeAsciiOnly
+import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInfo
 import org.junit.jupiter.api.assertThrows
@@ -55,8 +56,9 @@ class CompilerPluginTest {
   }
 
   // FIXME
+  @Disabled
   @Test
-  fun testInnerBlock(testInfo: TestInfo) {
+  fun testNestedBlock(testInfo: TestInfo) {
     """
     (1..10).forEach {
       defer { this += "${"$"}it" }

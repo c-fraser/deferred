@@ -18,19 +18,19 @@ limitations under the License.
 package io.github.cfraser.deferred
 
 /**
- * Defer the invocation of the [block] until the surrounding function returns.
+ * Defer the invocation of the [function] until the surrounding *block* exits.
  *
- * The [block] function is invoked after either of the following occurs.
+ * The [function] function is invoked after either of the following occurs.
  *
  * * A return statement is executed.
- * * The end of the function body is reached.
+ * * The end of the *block body* is reached.
  * * The corresponding thread/coroutine throws an exception.
  *
- * *Deferred functions* are invoked immediately before the surrounding function returns, in the
- * reverse order they were deferred.
+ * *Deferred functions* are invoked immediately before the containing *block* exits, in the reverse
+ * order they were deferred.
  *
- * Any exceptions thrown by the *deferred function* are ignored.
+ * Any exceptions thrown by the deferred [function] are ignored.
  */
-fun defer(block: () -> Unit) {
-  runCatching(block)
+fun defer(function: () -> Unit) {
+  runCatching(function)
 }
