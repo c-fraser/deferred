@@ -55,20 +55,18 @@ class CompilerPluginTest {
         .assertDeferred(testInfo, listOf("Before", "After"))
   }
 
-  // FIXME
-  @Disabled
   @Test
-  fun testNestedBlock(testInfo: TestInfo) {
+  fun testMultiple(testInfo: TestInfo) {
     """
-    (1..10).forEach {
-      defer { this += "${"$"}it" }
-    }
-    this += "0"
+    defer { this += "3" }
+    defer { this += "2" }
+    this += "1"
+    return this
     """
         .trimIndent()
         .sourceFile(testInfo)
         .compile()
-        .assertDeferred(testInfo, buildList { repeat(11) { this += "$it" } })
+        .assertDeferred(testInfo, listOf("1", "2", "3"))
   }
 
   @Test
@@ -99,6 +97,22 @@ class CompilerPluginTest {
     assertTrue { exception.cause is IllegalStateException }
     val field = assertNotNull(clazz.declaredFields.find { field -> field.name == "list" })
     assertEquals(listOf("Before", "After"), field[instance] as? List<*>)
+  }
+
+  // FIXME
+  @Disabled
+  @Test
+  fun testNestedBlock(testInfo: TestInfo) {
+    """
+    for (it in 1..10) {
+      defer { this += "${"$"}it" }
+    }
+    this += "0"
+    """
+        .trimIndent()
+        .sourceFile(testInfo)
+        .compile()
+        .assertDeferred(testInfo, buildList { repeat(11) { this += "$it" } })
   }
 
   private companion object {
