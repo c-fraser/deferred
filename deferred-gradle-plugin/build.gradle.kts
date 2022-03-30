@@ -16,6 +16,9 @@ gradlePlugin {
       implementationClass = "io.github.cfraser.deferred.GradlePlugin"
     }
   }
+
+  // Disable the automatic publication configuration.
+  isAutomatedPublishing = false
 }
 
 buildConfig {
