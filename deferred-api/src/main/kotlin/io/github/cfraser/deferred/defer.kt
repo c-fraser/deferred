@@ -20,7 +20,7 @@ package io.github.cfraser.deferred
 /**
  * Defer the invocation of the [function] until the surrounding *block* exits.
  *
- * The [function] function is invoked after either of the following occurs.
+ * The [function] is invoked after either of the following occurs.
  *
  * * A return statement is executed.
  * * The end of the *block body* is reached.
